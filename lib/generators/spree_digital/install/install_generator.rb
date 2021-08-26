@@ -1,30 +1,34 @@
 module SpreeDigital
   module Generators
     class InstallGenerator < Rails::Generators::Base
-      class_option :auto_run_migrations, :type => :boolean, :default => false
-
-      def add_javascripts
-        append_file "vendor/assets/javascripts/spree/frontend/all.js", "//= require spree/frontend/spree_digital\n"
-        append_file "vendor/assets/javascripts/spree/backend/all.js", "//= require spree/backend/spree_digital\n"
-      end
-
-      def add_stylesheets
-        inject_into_file "vendor/assets/stylesheets/spree/frontend/all.css", " *= require spree/frontend/spree_digital\n",
-                         :before => /\*\//, :verbose => true
-        inject_into_file "vendor/assets/stylesheets/spree/backend/all.css", " *= require spree/backend/spree_digital\n",
-                         :before => /\*\//, :verbose => true
-      end
+      class_option :auto_run_migrations, type: :boolean, default: true
+      class_option :seed, type: :boolean, default: true, banner: 'load seed data (migrations must be run)'
 
       def add_migrations
         run 'bundle exec rake railties:install:migrations FROM=spree_digital'
       end
 
       def run_migrations
-        run_migrations = options[:auto_run_migrations] || ['', 'y', 'Y'].include?(ask 'Would you like to run the migrations now? [Y/n]')
-        if run_migrations
+        if options[:auto_run_migrations] || options[:seed]
           run 'bundle exec rake db:migrate'
         else
           puts 'Skipping rake db:migrate, don\'t forget to run it!'
+        end
+      end
+
+      def include_seed_data
+        append_file 'db/seeds.rb', <<-SEEDS.strip_heredoc
+          SpreeDigital::Engine.load_seed if defined?(SpreeDigital)
+        SEEDS
+      end
+
+      def populate_seed_data
+        if options[:seed]
+          say_status :loading, 'seed data'
+          cmd = -> { rake('db:seed') }
+          cmd.call
+        else
+          say_status :skipping, 'seed data (you can always run rake db:seed)'
         end
       end
     end
