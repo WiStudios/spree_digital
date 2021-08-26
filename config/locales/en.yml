@@ -5,7 +5,7 @@ en:
     digitals:
       broken_file: Warning! this file is broken
       current_file: Current File
-      delete_file: Delete this file
+      delete_file: Delete
       delete_file_confirmation: Are you sure you want to delete the file %{filename}?
       digitals: Digitals
       digital_delivery: Digital Delivery
